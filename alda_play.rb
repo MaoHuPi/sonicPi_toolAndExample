@@ -5,13 +5,11 @@ def alda_play sheet
   volume = 80
   quant = 80
   pitch = 4
-  use_bpm tempo.to_f
   sheet = sheet.split('|').join(' ')
   sheet = sheet.split('>').join(' >')
   sheet = sheet.split('<').join(' <')
   for line in sheet.split("\n")
     for n in line.split(' ')
-      ##| print n
       if n[0] == '#' ##| 註解
         break
       elsif n[-1] == ':' ##| 樂器
