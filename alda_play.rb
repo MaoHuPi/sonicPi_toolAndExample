@@ -1,9 +1,10 @@
 '''
 2024 © MaoHuPi
-alda_play.rb 1.1.1
+alda_play.rb 1.1.2
 '''
 def alda_play sheet
   instrument = ''
+  chord_type = ''
   lastn = ''
   extent = 4
   tempo = 60
@@ -44,11 +45,6 @@ def alda_play sheet
         end
       elsif n[0] == 'o' ##| 音高
         pitch = n[1..-1]
-      elsif n[0] == 'r' ##| 休止
-        if n.length > 1
-          extent = n[1..-1]
-        end
-        sleep 4/extent.to_f
       elsif n[0] != '(' ##| 音符
         if n[0] == '>'
           pitch = pitch.to_i+1
@@ -58,21 +54,37 @@ def alda_play sheet
           n = n[1..-1]
         end
         name = n[0]
+        half_delta_pitch = 0
         if n.length > 1
-          extent = n[1..-1] + '<>'
-          print extent + extent.split('.').to_s
-          dotCount = extent.split('.').length - 1
-          extent = 4/extent.split('<>')[0].split('.')[0].to_f
-          if dotCount > 0
-            extentLevelNow = extent
-            (0..dotCount).each do |i|
-              extentLevelNow /= 2
-              extent += extentLevelNow
+          n = n[1..-1]
+          while n[0] == '+' or n[0] == '-' do ##| 升降音
+            half_delta_pitch += n[0] == '+' ? 1 : -1
+            n = n[1..-1]
+          end
+          if n.length > 0 ##| 音長
+            extent = n + '<>'
+            print extent + extent.split('.').to_s
+            dotCount = extent.split('.').length - 1
+            extent = 4/extent.split('<>')[0].split('.')[0].to_f
+            if dotCount > 0
+              extentLevelNow = extent
+              (0..dotCount).each do |i|
+                extentLevelNow /= 2
+                extent += extentLevelNow
+              end
             end
           end
         end
-        synth instrument, note: ":#{name}#{pitch}", amp: volume.to_f/100, release: extent.to_f*quant.to_i/100
-        ##| play ":#{name}#{pitch}", amp: volume.to_f/100, release: extent.to_f*quant.to_i/100
+        if name == 'r' ##| 休止
+          ##| do nothing
+        else
+          note = hz_to_midi(midi_to_hz("#{name}#{pitch}")) + half_delta_pitch
+          if chord_type != ''
+            note = chord(note, chord_type)
+          end
+          synth instrument, note: note, amp: volume.to_f/100, release: extent.to_f*quant.to_i/100
+          ##| play ":#{name}#{pitch}", amp: volume.to_f/100, release: extent.to_f*quant.to_i/100
+        end
         sleep extent.to_f
         # print extent
       end
